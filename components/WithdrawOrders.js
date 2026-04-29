@@ -103,6 +103,7 @@ export default function WithdrawOrders() {
               <th className="p-4 text-left">Order ID</th>
               <th className="p-4 text-left">Order Price</th>
               <th className="p-4 text-left">Quantity</th>
+              <th className="p-4 text-left">UPI ID</th>
               <th className="p-4 text-left">Deal Date</th>
               <th className="p-4 text-left">Status</th>
               <th className="p-4 text-left">Action</th>
@@ -110,25 +111,44 @@ export default function WithdrawOrders() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan="7" className="text-center py-12"><i className="fas fa-spinner fa-pulse text-2xl"></i> Loading...</td></tr>
+              <tr>
+                <td colSpan="8" className="text-center py-12">
+                  <i className="fas fa-spinner fa-pulse text-2xl"></i> Loading...
+                </td>
+              </tr>
             ) : paginated.length === 0 ? (
-              <tr><td colSpan="7" className="text-center py-12 text-gray-400">No withdraw orders found</td></tr>
+              <tr>
+                <td colSpan="8" className="text-center py-12 text-gray-400">
+                  No withdraw orders found
+                </td>
+              </tr>
             ) : (
               paginated.map((order, idx) => (
                 <tr key={order.id} className="border-b hover:bg-gray-50">
                   <td className="p-4">{start + idx + 1}</td>
-                  <td className="p-4"><span className="bg-blue-50 px-3 py-1 rounded-full text-sm font-medium">{order.order_id}</span></td>
+                  <td className="p-4">
+                    <span className="bg-blue-50 px-3 py-1 rounded-full text-sm font-medium">{order.order_id}</span>
+                  </td>
                   <td className="p-4">₹ {Number(order.order_price).toLocaleString('en-IN')}</td>
                   <td className="p-4">{order.quantity} ITokens</td>
+                  <td className="p-4">{order.upi_id || 'N/A'}</td>
                   <td className="p-4">{order.deal_date ? new Date(order.deal_date).toLocaleString('en-IN') : 'N/A'}</td>
-                  <td className="p-4"><span className={`status-${order.status}`}>{order.status}</span></td>
+                  <td className="p-4">
+                    <span className={`status-${order.status}`}>{order.status}</span>
+                  </td>
                   <td className="p-4">
                     {order.status === 'pending' ? (
                       <div className="flex gap-2">
-                        <button onClick={() => updateStatus(order.id, 'approved')} className="btn-approve"><i className="fas fa-check-circle"></i> Approve</button>
-                        <button onClick={() => updateStatus(order.id, 'rejected')} className="btn-reject"><i className="fas fa-ban"></i> Reject</button>
+                        <button onClick={() => updateStatus(order.id, 'approved')} className="btn-approve">
+                          <i className="fas fa-check-circle"></i> Approve
+                        </button>
+                        <button onClick={() => updateStatus(order.id, 'rejected')} className="btn-reject">
+                          <i className="fas fa-ban"></i> Reject
+                        </button>
                       </div>
-                    ) : <span className="text-gray-400">—</span>}
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </td>
                 </tr>
               ))
@@ -139,16 +159,34 @@ export default function WithdrawOrders() {
 
       {filtered.length > 0 && (
         <div className="flex justify-between items-center mt-5 flex-wrap gap-3">
-          <div>Showing {Math.min(start+1, filtered.length)} to {Math.min(start+entriesPerPage, filtered.length)} of {filtered.length} entries</div>
+          <div>
+            Showing {Math.min(start + 1, filtered.length)} to {Math.min(start + entriesPerPage, filtered.length)} of {filtered.length} entries
+          </div>
           <div className="flex gap-2">
-            <button onClick={() => setCurrentPage(p => Math.max(1, p-1))} disabled={currentPage === 1} className="px-4 py-1 border rounded-full disabled:opacity-50">Prev</button>
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-1 border rounded-full disabled:opacity-50"
+            >
+              Prev
+            </button>
             <span className="px-4 py-1">Page {currentPage} of {totalPages}</span>
-            <button onClick={() => setCurrentPage(p => Math.min(totalPages, p+1))} disabled={currentPage === totalPages} className="px-4 py-1 border rounded-full disabled:opacity-50">Next</button>
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-1 border rounded-full disabled:opacity-50"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}
 
-      {toast && <div className="fixed bottom-5 right-5 bg-gray-800 text-white px-5 py-3 rounded-full text-sm z-50 animate-fadeIn">{toast}</div>}
+      {toast && (
+        <div className="fixed bottom-5 right-5 bg-gray-800 text-white px-5 py-3 rounded-full text-sm z-50 animate-fadeIn">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

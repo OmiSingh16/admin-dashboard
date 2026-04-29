@@ -103,6 +103,7 @@ export default function WithdrawPage() {
               <th>Order ID</th>
               <th>Order Price</th>
               <th>Quantity</th>
+              <th>UPI ID</th>
               <th>Deal Date</th>
               <th>Status</th>
               <th>Action</th>
@@ -111,11 +112,11 @@ export default function WithdrawPage() {
           <tbody>
             {loading ? (
               <tr className="empty-row">
-                <td colSpan="7"><i className="fas fa-spinner fa-pulse"></i> Loading orders...</td>
+                <td colSpan="8"><i className="fas fa-spinner fa-pulse"></i> Loading orders...</td>
               </tr>
             ) : paginated.length === 0 ? (
               <tr className="empty-row">
-                <td colSpan="7">No withdraw orders found</td>
+                <td colSpan="8">No withdraw orders found</td>
               </tr>
             ) : (
               paginated.map((order, idx) => {
@@ -126,6 +127,7 @@ export default function WithdrawPage() {
                     <td><span style={{ background: '#f0f6ff', padding: '4px 10px', borderRadius: '40px', fontSize: '0.7rem', fontWeight: '600' }}>{order.order_id}</span></td>
                     <td>₹ {Number(order.order_price).toLocaleString('en-IN')}</td>
                     <td>{order.quantity} ITokens</td>
+                    <td>{order.upi_id || 'N/A'}</td>
                     <td>{dealDate}</td>
                     <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>
                     <td className="action-buttons">
