@@ -208,13 +208,13 @@ body {
 }
 
 /* ==================== SIDEBAR STYLES ==================== */
+/* Sidebar styles - already existing */
 .sidebar {
   width: 260px;
-  background: rgba(15, 25, 45, 0.96);
-  backdrop-filter: blur(8px);
   padding: 32px 0;
   flex-shrink: 0;
 }
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -223,10 +223,10 @@ body {
   margin: 6px 12px;
   border-radius: 14px;
   font-weight: 500;
-  color: #bac4d3;
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
+  text-decoration: none;
 }
 
 .nav-item:hover {
@@ -238,7 +238,6 @@ body {
   color: white;
 }
 
-/* GRAY UNDERLINE FOR ACTIVE NAV ITEM */
 .nav-item.active::after {
   content: '';
   position: absolute;
@@ -246,13 +245,27 @@ body {
   left: 10%;
   width: 80%;
   height: 2px;
-  background: #94a3b8;  /* ← GRAY COLOR */
+  background: #94a3b8;
   border-radius: 3px;
 }
 
 .nav-item i {
   width: 22px;
-  color: #d3d6de;
+}
+
+/* Page Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.page-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
 }
 /* ==================== MAIN CONTENT ==================== */
 .main-content {
@@ -550,6 +563,18 @@ body {
   }
 }
 
+
+/* Add this to your global CSS file */
+.edit-overlay {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+div:hover > .edit-overlay {
+  opacity: 1;
+}
+
+/* For the popup close on outside click - Add this in SettingsPage */
 
 /* Small & Medium Screen Sidebar Fix */
 @media (max-width: 900px) {

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Sidebar from '@/components/Sidebar';
+import Sidebar from '../components/Sidebar';
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -19,9 +19,16 @@ export default function DashboardLayout({ children }) {
   };
 
   return (
-    <div className="app-layout">
+    <div className="app-layout" style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar onLogout={handleLogout} />
-      <div className="main-content">
+      <div className="main-content" style={{ 
+        marginLeft: '260px',
+        padding: '32px',
+        flex: 1,
+        background: '#f8fafc',
+        minHeight: '100vh',
+        width: 'calc(100% - 260px)'
+      }}>
         {children}
       </div>
     </div>
