@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 
-const ThemeContext = createContext();
+const ThemeContext = createContext(null);
 
 const defaultTheme = {
   background: 'rgba(15, 25, 45, 0.96)',
@@ -16,11 +16,10 @@ const defaultTheme = {
 
 export function ThemeProvider({ children }) {
   const [sidebarTheme, setSidebarTheme] = useState(defaultTheme);
-  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
     const savedTheme = localStorage.getItem('sidebarTheme');
+
     if (savedTheme) {
       try {
         setSidebarTheme(JSON.parse(savedTheme));
@@ -35,10 +34,6 @@ export function ThemeProvider({ children }) {
     localStorage.setItem('sidebarTheme', JSON.stringify(newTheme));
   };
 
-  if (!isMounted) {
-    return <>{children}</>;
-  }
-
   return (
     <ThemeContext.Provider value={{ sidebarTheme, updateTheme }}>
       {children}
@@ -48,13 +43,10 @@ export function ThemeProvider({ children }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  // ✅ ERROR HATAO - Fallback do
+
   if (!context) {
-    console.warn('⚠️ useTheme used outside ThemeProvider - using fallback theme');
-    return {
-      sidebarTheme: defaultTheme,
-      updateTheme: () => console.warn('Theme update not available')
-    };
+    throw new Error('useTheme must be used inside ThemeProvider');
   }
+
   return context;
 }

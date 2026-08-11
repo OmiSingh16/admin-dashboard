@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { 
-    UserCog, Trash2, UserRoundCheck, Wallet, ChartLine,Search, FileUser, UserPlus, RefreshCw, Pencil
+    UserCog, Trash2, UserRoundCheck, Wallet, ChartLine,Search, FileUser, UserPlus, RefreshCw, Pencil,
+    Plus,Minus,
+    Cog,
+    HardDriveUpload
 } from 'lucide-react';
 import Toast from '../../components/Toast';
 
@@ -19,10 +22,8 @@ export default function UserAccountsPage() {
     const [showBalanceModal, setShowBalanceModal] = useState(false);
     const [balanceAction, setBalanceAction] = useState('add');
     const [balanceAmount, setBalanceAmount] = useState('');
-    const [balanceRemark, setBalanceRemark] = useState('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
-const [deleteUserId, setDeleteUserId] = useState(null);
-
+    const [deleteUserId, setDeleteUserId] = useState(null);
 
     const [toast, setToast] = useState(null);
 
@@ -74,10 +75,9 @@ const [deleteUserId, setDeleteUserId] = useState(null);
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: editData.user_id,
-                    pin: editData.pin || null, 
+                    pin: editData.pin || null,
                     balance: editData.balance,
                     account_status: editData.account_status,
-                    remarks: editData.remarks,
                     performed_by: 'Admin'
                 })
             });
@@ -109,17 +109,16 @@ const [deleteUserId, setDeleteUserId] = useState(null);
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     user_id: editData.user_id,
-                    pin: editData.pin || null, 
+                    pin: editData.pin || null,
                     balance: editData.balance || 0,
-                    account_status: 'active',
-                    remarks: editData.remarks || 'New user created'
+                    account_status: 'active'
                 })
             });
             
             const data = await response.json();
             
             if (response.ok) {
-                 showToast('User created successfully!', 'success');
+                showToast('User created successfully!', 'success');
                 fetchUsers();
                 setShowUserModal(false);
                 setEditData({});
@@ -132,93 +131,91 @@ const [deleteUserId, setDeleteUserId] = useState(null);
         }
     };
 
-const handleDeleteClick = (userId) => {
-    setDeleteUserId(userId);
-    setShowDeleteModal(true);
-};
+    const handleDeleteClick = (userId) => {
+        setDeleteUserId(userId);
+        setShowDeleteModal(true);
+    };
 
-const confirmDelete = async () => {
-    if (!deleteUserId) return;
-    
-    try {
-        const response = await fetch(`/api/users?userId=${deleteUserId}`, {
-            method: 'DELETE'
-        });
+    const confirmDelete = async () => {
+        if (!deleteUserId) return;
         
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast('User deleted successfully!', 'success');
-            fetchUsers();
-            if (selectedUser?.user_id === deleteUserId) {
-                setShowUserModal(false);
+        try {
+            const response = await fetch(`/api/users?userId=${deleteUserId}`, {
+                method: 'DELETE'
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showToast('User deleted successfully!', 'success');
+                fetchUsers();
+                if (selectedUser?.user_id === deleteUserId) {
+                    setShowUserModal(false);
+                }
+                setShowDeleteModal(false);
+                setDeleteUserId(null);
+            } else {
+                showToast(data.error || 'Failed to delete user', 'error');
             }
-            setShowDeleteModal(false);
-            setDeleteUserId(null);
-        } else {
-            showToast(data.error || 'Failed to delete user', 'error');
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Failed to delete user', 'error');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Failed to delete user', 'error');
-    }
-};
+    };
 
-const handleBalanceUpdate = async () => {
-    if (!balanceAmount || isNaN(balanceAmount) || parseFloat(balanceAmount) <= 0) {
-        showToast('Please enter a valid amount', 'warning');
-        return;
-    }
+    const handleBalanceUpdate = async () => {
+        if (!balanceAmount || isNaN(balanceAmount) || parseFloat(balanceAmount) <= 0) {
+            showToast('Please enter a valid amount', 'warning');
+            return;
+        }
 
-    const amount = parseFloat(balanceAmount);
-    let newBalance = selectedUser.balance;
+        const amount = parseFloat(balanceAmount);
+        let newBalance = selectedUser.balance;
 
-    switch(balanceAction) {
-        case 'add':
-            newBalance = selectedUser.balance + amount;
-            break;
-        case 'deduct':
-            if (amount > selectedUser.balance) {
-                showToast('Insufficient balance!', 'error');
-                return;
+        switch(balanceAction) {
+            case 'add':
+                newBalance = selectedUser.balance + amount;
+                break;
+            case 'deduct':
+                if (amount > selectedUser.balance) {
+                    showToast('Insufficient balance!', 'error');
+                    return;
+                }
+                newBalance = selectedUser.balance - amount;
+                break;
+            case 'set':
+                newBalance = amount;
+                break;
+        }
+
+        try {
+            const response = await fetch('/api/users/balance', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: selectedUser.user_id,
+                    new_balance: newBalance,
+                    action: balanceAction,
+                    amount: amount
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                showToast(`Balance updated! New balance: ₹${newBalance.toLocaleString()}`, 'success');
+                fetchUsers();
+                handleViewUser(selectedUser.user_id);
+                setShowBalanceModal(false);
+                setBalanceAmount('');
+            } else {
+                showToast(data.error || 'Failed to update balance', 'error');
             }
-            newBalance = selectedUser.balance - amount;
-            break;
-        case 'set':
-            newBalance = amount;
-            break;
-    }
-
-    try {
-        const response = await fetch('/api/users/balance', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                user_id: selectedUser.user_id,
-                new_balance: newBalance,
-                action: balanceAction,
-                amount: amount
-                // remarks REMOVED - API handle nahi kar raha
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showToast(`Balance updated! New balance: ₹${newBalance.toLocaleString()}`, 'success');
-            fetchUsers();
-            handleViewUser(selectedUser.user_id);
-            setShowBalanceModal(false);
-            setBalanceAmount('');
-            setBalanceRemark('');
-        } else {
-            showToast(data.error || 'Failed to update balance', 'error');
+        } catch (error) {
+            console.error('Error:', error);
+            showToast('Failed to update balance', 'error');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('Failed to update balance', 'error');
-    }
-};
+    };
 
     const getStatusBadge = (status) => {
         const statusMap = {
@@ -311,13 +308,13 @@ const handleBalanceUpdate = async () => {
                     </select>
                     <button
                         onClick={() => {
-                            setEditData({ user_id: '', balance: 0, remarks: '' });
+                            setEditData({ user_id: '', balance: 0 });
                             setModalMode('create');
                             setShowUserModal(true);
                         }}
                         className="btn btn-green"
                     >
-                        <UserPlus size={16} /> Add User
+                        <UserPlus size={16} />
                     </button>
                     <button onClick={fetchUsers} className="btn btn-gray"><RefreshCw size={16} /></button>
                 </div>
@@ -342,60 +339,59 @@ const handleBalanceUpdate = async () => {
                             </tr>
                         ) : (
                             filteredUsers.map((user) => (
-    <tr key={user.id}>
-        <td className="user-id-cell">{user.user_id}</td>
-        <td className="balance-cell">
-            <span className="balance-amount">₹{user.balance?.toLocaleString() || 0}</span>
-            <button
-                onClick={() => {
-                    setSelectedUser(user);
-                    setShowBalanceModal(true);
-                    setBalanceAction('add');
-                    setBalanceAmount('');
-                    setBalanceRemark('');
-                }}
-                className="btn-edit-balance"
-                title="Edit Balance"
-            >
-                <Pencil size={16} />
-            </button>
-        </td>
-        <td dangerouslySetInnerHTML={{ __html: getStatusBadge(user.account_status) }} />
-        <td className="pin-cell">
-            <span className="pin-display">{user.pin || '—'}</span>
-            <button
-                onClick={() => {
-                    setSelectedUser(user);
-                    setEditData(user);
-                    setModalMode('edit');
-                    setShowUserModal(true);
-                }}
-                className="btn-edit-pin"
-                title="Edit PIN"
-            >
-                <Pencil size={16} />
-            </button>
-        </td>
-        <td>
-            <div className="action-buttons">
-                <button
-                    onClick={() => handleViewUser(user.user_id)}
-                    className="btn-action btn-view"
-                    title="View Details"
-                >
-                    <UserCog size={16} />
-                </button>
-                <button
-                    onClick={() => handleDeleteClick(user.user_id)}
-                    className="btn-action btn-delete"
-                    title="Delete User"
-                >
-                    <Trash2 size={16} />
-                </button>
-            </div>
-        </td>
-    </tr>
-))
+                                <tr key={user.id}>
+                                    <td className="user-id-cell">{user.user_id}</td>
+                                    <td className="balance-cell">
+                                        <span className="balance-amount">₹{user.balance?.toLocaleString() || 0}</span>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedUser(user);
+                                                setShowBalanceModal(true);
+                                                setBalanceAction('add');
+                                                setBalanceAmount('');
+                                            }}
+                                            className="btn-edit-balance"
+                                            title="Edit Balance"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+                                    </td>
+                                    <td dangerouslySetInnerHTML={{ __html: getStatusBadge(user.account_status) }} />
+                                    <td className="pin-cell">
+                                        <span className="pin-display">{user.pin || '—'}</span>
+                                        <button
+                                            onClick={() => {
+                                                setSelectedUser(user);
+                                                setEditData(user);
+                                                setModalMode('edit');
+                                                setShowUserModal(true);
+                                            }}
+                                            className="btn-edit-pin"
+                                            title="Edit PIN"
+                                        >
+                                            <Pencil size={16} />
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <div className="action-buttons">
+                                            <button
+                                                onClick={() => handleViewUser(user.user_id)}
+                                                className="btn-action btn-view"
+                                                title="View Details"
+                                            >
+                                                <UserCog size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteClick(user.user_id)}
+                                                className="btn-action btn-delete"
+                                                title="Delete User"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))
                         )}
                     </tbody>
                 </table>
@@ -411,13 +407,22 @@ const handleBalanceUpdate = async () => {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <div className="modal-header modal-header-blue">
-                            <h2>💰 Update Balance</h2>
+                            <h2><Wallet size={24} /> Update Balance</h2>
                             <button onClick={() => setShowBalanceModal(false)} className="modal-close">✕</button>
                         </div>
                         <div className="modal-body">
                             <div className="balance-info">
-                                <p><strong>User:</strong> {selectedUser.user_id}</p>
-                                <p><strong>Current Balance:</strong> ₹{selectedUser.balance?.toLocaleString()}</p>
+                                <div className="balance-row">
+                                    <div className="balance-item">
+                                        <span className="balance-label">User</span>
+                                        <span className="balance-value">{selectedUser.user_id}</span>
+                                    </div>
+                                    <div className="balance-divider"></div>
+                                    <div className="balance-item">
+                                        <span className="balance-label">Current Balance</span>
+                                        <span className="balance-value">₹{selectedUser.balance?.toLocaleString()}</span>
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="form-group">
@@ -427,19 +432,19 @@ const handleBalanceUpdate = async () => {
                                         onClick={() => setBalanceAction('add')}
                                         className={`action-btn ${balanceAction === 'add' ? 'active-add' : 'inactive-add'}`}
                                     >
-                                        ➕ Add
+                                        <Plus size={16} /> Add
                                     </button>
                                     <button
                                         onClick={() => setBalanceAction('deduct')}
                                         className={`action-btn ${balanceAction === 'deduct' ? 'active-deduct' : 'inactive-deduct'}`}
                                     >
-                                        ➖ Deduct
+                                        <Minus size={16} /> Deduct
                                     </button>
                                     <button
                                         onClick={() => setBalanceAction('set')}
                                         className={`action-btn ${balanceAction === 'set' ? 'active-set' : 'inactive-set'}`}
                                     >
-                                        📝 Set
+                                        <Cog size={16} /> Set
                                     </button>
                                 </div>
                             </div>
@@ -471,19 +476,8 @@ const handleBalanceUpdate = async () => {
                                 )}
                             </div>
 
-                            <div className="form-group">
-                                <label className="form-label">Remark (Optional)</label>
-                                <textarea
-                                    value={balanceRemark}
-                                    onChange={(e) => setBalanceRemark(e.target.value)}
-                                    rows="2"
-                                    className="form-textarea"
-                                    placeholder="Enter remark for this balance update..."
-                                ></textarea>
-                            </div>
-
                             <div className="modal-actions">
-                                <button onClick={handleBalanceUpdate} className="btn btn-blue btn-full">Update Balance</button>
+                                <button onClick={handleBalanceUpdate} className="btn btn-blue btn-full"><HardDriveUpload size={20} /> Update Balance</button>
                                 <button onClick={() => setShowBalanceModal(false)} className="btn btn-gray btn-full">Cancel</button>
                             </div>
                         </div>
@@ -550,48 +544,33 @@ const handleBalanceUpdate = async () => {
                             </div>
 
                             {/* PIN - View Mode */}
-{modalMode === 'view' && selectedUser && (
-    <div className="form-group">
-        <label className="form-label">PIN</label>
-        <p className="form-display">{selectedUser?.pin || 'Not set'}</p>
-    </div>
-)}
+                            {modalMode === 'view' && selectedUser && (
+                                <div className="form-group">
+                                    <label className="form-label">PIN</label>
+                                    <p className="form-display">{selectedUser?.pin || 'Not set'}</p>
+                                </div>
+                            )}
 
-{/* PIN - Edit/Create Mode */}
-{(modalMode === 'edit' || modalMode === 'create') && (
-    <div className="form-group">
-        <label className="form-label">PIN</label>
-        <input
-            type="text"
-            maxLength="10"
-            value={editData.pin || ''}
-            onChange={(e) => setEditData({...editData, pin: e.target.value})}
-            className="form-input"
-            placeholder="Enter PIN (optional)"
-        />
-    </div>
-)}
-
-                            <div className="form-group">
-                                <label className="form-label">Remarks</label>
-                                {modalMode === 'view' ? (
-                                    <p className="form-display">{selectedUser?.remarks || 'No remarks'}</p>
-                                ) : (
-                                    <textarea
-                                        value={editData.remarks || ''}
-                                        onChange={(e) => setEditData({...editData, remarks: e.target.value})}
-                                        rows="2"
-                                        className="form-textarea"
-                                        placeholder="Enter remarks..."
+                            {/* PIN - Edit/Create Mode */}
+                            {(modalMode === 'edit' || modalMode === 'create') && (
+                                <div className="form-group">
+                                    <label className="form-label">PIN</label>
+                                    <input
+                                        type="text"
+                                        maxLength="10"
+                                        value={editData.pin || ''}
+                                        onChange={(e) => setEditData({...editData, pin: e.target.value})}
+                                        className="form-input"
+                                        placeholder="Enter PIN (optional)"
                                     />
-                                )}
-                            </div>
+                                </div>
+                            )}
 
                             <div className="modal-actions">
                                 {modalMode === 'view' && (
                                     <>
                                         <button onClick={() => setModalMode('edit')} className="btn btn-yellow btn-full">✏️ Edit User</button>
-                                        <button onClick={() => handleDeleteUser(selectedUser?.user_id)} className="btn btn-red btn-full">🗑️ Delete User</button>
+                                        <button onClick={() => handleDeleteClick(selectedUser?.user_id)} className="btn btn-red btn-full">🗑️ Delete User</button>
                                     </>
                                 )}
                                 {modalMode === 'edit' && (
@@ -606,7 +585,6 @@ const handleBalanceUpdate = async () => {
                                         <button onClick={() => setShowUserModal(false)} className="btn btn-gray btn-full">Cancel</button>
                                     </>
                                 )}
-                                
                             </div>
                         </div>
                     </div>
@@ -614,45 +592,45 @@ const handleBalanceUpdate = async () => {
             )}
 
             {/* Delete Confirmation Modal */}
-{showDeleteModal && (
-    <div className="modal-overlay">
-        <div className="modal-content" style={{ maxWidth: '400px' }}>
-            <div className="modal-header" style={{ background: '#ef4444', color: 'white' }}>
-                <h2>🗑️ Confirm Delete</h2>
-                <button onClick={() => setShowDeleteModal(false)} className="modal-close">✕</button>
-            </div>
-            <div className="modal-body" style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
-                <h3 style={{ marginBottom: '8px', color: '#1e293b' }}>Are you sure?</h3>
-                <p style={{ color: '#64748b', marginBottom: '24px' }}>
-                    This action cannot be undone. This will permanently delete the user account.
-                </p>
-                <div className="modal-actions" style={{ flexDirection: 'row' }}>
-                    <button
-                        onClick={confirmDelete}
-                        className="btn btn-red btn-full"
-                    >
-                        Yes, Delete
-                    </button>
-                    <button
-                        onClick={() => setShowDeleteModal(false)}
-                        className="btn btn-gray btn-full"
-                    >
-                        Cancel
-                    </button>
+            {showDeleteModal && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: '400px' }}>
+                        <div className="modal-header" style={{ background: '#ef4444', color: 'white' }}>
+                            <h2>🗑️ Confirm Delete</h2>
+                            <button onClick={() => setShowDeleteModal(false)} className="modal-close">✕</button>
+                        </div>
+                        <div className="modal-body" style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+                            <h3 style={{ marginBottom: '8px', color: '#1e293b' }}>Are you sure?</h3>
+                            <p style={{ color: '#64748b', marginBottom: '24px' }}>
+                                This action cannot be undone. This will permanently delete the user account.
+                            </p>
+                            <div className="modal-actions" style={{ flexDirection: 'row' }}>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="btn btn-red btn-full"
+                                >
+                                    Yes, Delete
+                                </button>
+                                <button
+                                    onClick={() => setShowDeleteModal(false)}
+                                    className="btn btn-gray btn-full"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-    </div>
-)}
+            )}
 
-                    {toast && (
-            <Toast 
-                message={toast.message} 
-                type={toast.type} 
-                onClose={hideToast} 
-            />
-        )}
+            {toast && (
+                <Toast 
+                    message={toast.message} 
+                    type={toast.type} 
+                    onClose={hideToast} 
+                />
+            )}
         </div>
     );
 }

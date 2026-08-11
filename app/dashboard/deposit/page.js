@@ -127,7 +127,7 @@ export default function DepositPage() {
                     <td>{start + idx + 1}</td>
                     <td><span style={{ background: '#f0f6ff', padding: '4px 10px', borderRadius: '40px', fontSize: '0.7rem', fontWeight: '600' }}>{order.order_id}</span></td>
                     <td>₹ {Number(order.order_price).toLocaleString('en-IN')}</td>
-                    <td>{order.quantity} ITokens</td>
+                    <td>{order.quantity} Tokens</td>
                     <td>{order.utr || 'N/A'}</td>
                     <td>{dealDate}</td>
                     <td><span className={`status-badge status-${order.status}`}>{order.status}</span></td>

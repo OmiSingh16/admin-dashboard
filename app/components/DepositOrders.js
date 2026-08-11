@@ -122,7 +122,7 @@ export default function DepositOrders() {
                   <td className="p-4">{start + idx + 1}</td>
                   <td className="p-4"><span className="bg-blue-50 px-3 py-1 rounded-full text-sm font-medium">{order.order_id}</span></td>
                   <td className="p-4">₹ {Number(order.order_price).toLocaleString('en-IN')}</td>
-                  <td className="p-4">{order.quantity} ITokens</td>
+                  <td className="p-4">{order.quantity} Tokens</td>
                   <td className="p-4">{order.utr || 'N/A'}</td>
                   <td className="p-4">{order.deal_date ? new Date(order.deal_date).toLocaleString('en-IN') : 'N/A'}</td>
                   <td className="p-4"><span className={`status-${order.status}`}>{order.status}</span></td>
